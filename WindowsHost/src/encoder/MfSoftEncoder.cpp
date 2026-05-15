@@ -23,6 +23,7 @@
 #include <mfreadwrite.h>
 #include <codecapi.h>
 #include <initguid.h>
+#include <wmcodecdsp.h>
 
 #include <cstdio>
 #include <cstring>
