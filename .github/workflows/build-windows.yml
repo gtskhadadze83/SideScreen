@@ -2,9 +2,14 @@ name: Build Windows
 
 on:
   push:
-    branches: [main, feature/windows-host]
+    branches:
+      - main
+      - 'feature/windows-host'
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - 'feature/windows-host'
+  workflow_dispatch: 
 
 jobs:
   build:
