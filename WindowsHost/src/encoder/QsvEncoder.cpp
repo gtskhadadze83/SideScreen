@@ -13,6 +13,7 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
+#include <wmcodecdsp.h>
 #include <d3d11.h>
 #include <dxgi.h>
 
@@ -25,7 +26,7 @@
 #include <codecapi.h>
 #include <initguid.h>
 
-#include <wmcodecdsp.h>
+
 
 #include <cstdio>
 #include <cstring>
