@@ -4,88 +4,15 @@ on:
   push:
     tags:
       - '[0-9]*'
+    branches:
+      - main
+      - 'feature/windows-host'
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build-mac:
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Read version
-        id: version
-        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
-
-      - name: Build macOS
-        run: |
-          cd MacHost
-          swift build -c release
-
-      - name: Create .app bundle
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          APP_DIR="SideScreen.app"
-          mkdir -p "$APP_DIR/Contents/MacOS"
-          mkdir -p "$APP_DIR/Contents/Resources"
-          cp MacHost/.build/release/SideScreen "$APP_DIR/Contents/MacOS/"
-
-          # Copy icon if exists
-          if [ -f "MacHost/Resources/AppIcon.icns" ]; then
-            cp MacHost/Resources/AppIcon.icns "$APP_DIR/Contents/Resources/"
-          fi
-
-          cat > "$APP_DIR/Contents/Info.plist" << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>CFBundleExecutable</key>
-              <string>SideScreen</string>
-              <key>CFBundleIconFile</key>
-              <string>AppIcon</string>
-              <key>CFBundleIdentifier</key>
-              <string>com.sidescreen.app</string>
-              <key>CFBundleName</key>
-              <string>Side Screen</string>
-              <key>CFBundleDisplayName</key>
-              <string>Side Screen</string>
-              <key>CFBundleVersion</key>
-              <string>${VERSION}</string>
-              <key>CFBundleShortVersionString</key>
-              <string>${VERSION}</string>
-              <key>CFBundlePackageType</key>
-              <string>APPL</string>
-              <key>LSMinimumSystemVersion</key>
-              <string>14.0</string>
-              <key>LSUIElement</key>
-              <false/>
-              <key>NSHighResolutionCapable</key>
-              <true/>
-              <key>NSSupportsAutomaticGraphicsSwitching</key>
-              <true/>
-          </dict>
-          </plist>
-          EOF
-
-      - name: Ad-hoc code sign
-        run: codesign --force --deep --sign - SideScreen.app
-
-      - name: Create DMG
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          mkdir -p dmg-content
-          cp -R SideScreen.app dmg-content/
-          ln -s /Applications dmg-content/Applications
-          hdiutil create -volname "Side Screen" -srcfolder dmg-content -ov -format UDZO "SideScreen-${VERSION}-mac.dmg"
-          rm -rf dmg-content
-
-      - name: Upload DMG
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-dmg
-          path: "*.dmg"
 
   build-android:
     runs-on: ubuntu-latest
@@ -119,8 +46,54 @@ jobs:
           name: android-apk
           path: "*.apk"
 
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt 6
+        uses: jurplel/install-qt-action@v4.3.1
+        with:
+          version: '6.7.3'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+
+      - name: Configure CMake
+        working-directory: WindowsHost
+        run: cmake -B build -G "Visual Studio 16 2019" -A x64
+
+      - name: Build
+        working-directory: WindowsHost
+        run: cmake --build build --config Release
+
+      - name: Prepare dist with windeployqt
+        working-directory: WindowsHost
+        shell: cmd
+        run: |
+          mkdir installer\dist
+          copy build\Release\SideScreen.exe installer\dist\
+          windeployqt --release --no-translations --no-opengl-sw installer\dist\SideScreen.exe
+
+      - name: Build installer with Inno Setup
+        working-directory: WindowsHost/installer
+        shell: cmd
+        run: |
+          "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" sidescreen.iss
+
+      - name: Rename APK
+        run: |
+          cp WindowsHost/installer/output/SideScreen-Setup.exe "SideScreen-Setup.exe"
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-Exe
+          path: SideScreen-Setup.exe
+
   create-release:
-    needs: [build-mac, build-android]
+    needs: [build-android, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -161,14 +134,12 @@ jobs:
             ### Downloads
             | Platform | File |
             |----------|------|
-            | macOS | `SideScreen-${{ steps.version.outputs.version }}-mac.dmg` |
+            | Windows | `SideScreen-Setup.exe` |
             | Android | `SideScreen-${{ steps.version.outputs.version }}-android.apk` |
 
-            ### Installation
-            - **macOS**: Open DMG, drag to Applications. If Gatekeeper says "damaged": `sudo xattr -cr /Applications/SideScreen.app`
-            - **Android**: Install APK (enable "Unknown sources" if needed)
+           
           files: |
-            artifacts/macos-dmg/*.dmg
+            artifacts/Windows-Exe/*.exe
             artifacts/android-apk/*.apk
           draft: false
           prerelease: false
