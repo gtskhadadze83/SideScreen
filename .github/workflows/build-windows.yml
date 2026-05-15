@@ -1,17 +1,17 @@
 name: Build Windows
 
 on:
-  push:
+ push:
     branches:
       - main
       - 'feature/windows-host'
-  pull_request:
+ pull_request:
     branches:
       - main
       - 'feature/windows-host'
-  workflow_dispatch: 
+ workflow_dispatch:
 
- jobs:
+jobs:
   build:
     runs-on: windows-latest
 
@@ -20,9 +20,9 @@ on:
 
       - uses: actions/setup-python@v6
         with:
-        python-version: '3.14'
-        check-latest: false
-        update-environment: true
+         python-version: '3.14'
+         check-latest: false
+         update-environment: true
 
       - name: Install Qt 6
         uses: jurplel/install-qt-action@v4
