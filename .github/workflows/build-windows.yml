@@ -11,20 +11,31 @@ on:
       - 'feature/windows-host'
   workflow_dispatch: 
 
-jobs:
+ jobs:
   build:
     runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v6
+        with:
+        python-version: '3.14'
+        check-latest: false
+        update-environment: true
+
       - name: Install Qt 6
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.7'
+          version: '6.8.0'
           host: 'windows'
           target: 'desktop'
           arch: 'win64_msvc2022_64'
+          install-deps: 'true'
+          setup-python: 'false'
+          set-env: 'true'
+          aqtversion: '==3.3.*'
+          py7zrversion: '==1.1.*'
 
       - name: Configure CMake
         working-directory: WindowsHost
