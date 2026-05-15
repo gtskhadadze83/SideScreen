@@ -7,6 +7,7 @@
 
 // Windows headers for COM, OutputDebugString, thread priority
 #include <Windows.h>
+#include <winioctl.h>
 #include <comdef.h>
 
 // Link required libraries
