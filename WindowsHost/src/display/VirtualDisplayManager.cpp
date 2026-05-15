@@ -1,5 +1,7 @@
 #include "VirtualDisplayManager.h"
 
+#include <winioctl.h>
+
 #include <cstdarg>
 #include <cstdio>
 #include <algorithm>
