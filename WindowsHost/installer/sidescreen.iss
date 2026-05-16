@@ -27,7 +27,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 WizardStyle=modern
 DisableProgramGroupPage=yes
-DisableWelcomeNoUpdate=no
+; DisableWelcomeNoUpdate=no
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]
