@@ -14,6 +14,8 @@
 #endif
 #define NOMINMAX
 #include <windows.h>
+#undef min
+#undef max
 #include <d3d11.h>
 
 // Media Foundation headers
