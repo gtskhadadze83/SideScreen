@@ -99,6 +99,7 @@ target_link_libraries(SideScreen PRIVATE
     mfuuid
     mf
     mfreadwrite
+    strmiids
 )
 
 # Tests (optional)
